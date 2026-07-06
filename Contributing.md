@@ -32,7 +32,7 @@ Please remember to follow our **[Code of Conduct](https://github.com/sahil-me/fr
 
 ---
 
-# Ways to Contribute
+## Ways to Contribute
 
 There are many ways you can contribute to **OpenStream OTT**.
 
@@ -49,7 +49,7 @@ There are many ways you can contribute to **OpenStream OTT**.
 
 ---
 
-# Reporting Bugs
+## Reporting Bugs
 
 If you discover a bug, please open an issue and include as much information as possible.
 
@@ -68,7 +68,7 @@ Before creating a new issue, please check whether it has already been reported.
 
 ---
 
-# Requesting a Feature
+## Requesting a Feature
 
 Have an idea to improve **OpenStream OTT**?
 
@@ -83,7 +83,7 @@ Well-described feature requests help us review and implement improvements more e
 
 ---
 
-# Improving Documentation
+## Improving Documentation
 
 Documentation improvements are always welcome.
 
@@ -98,11 +98,11 @@ Examples include:
 
 ---
 
-# Fixing Outstanding Issues
+## Fixing Outstanding Issues
 
 If you notice an issue with the existing code and have a fix in mind, feel free to **[start contributing](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)** and open a Pull Request.
 
-## Making Code Contributions
+### Making Code Contributions
 
 <details>
 
@@ -115,7 +115,7 @@ If you notice an issue with the existing code and have a fix in mind, feel free 
   ```bash
   git clone https://github.com/<your-username>/free-iptv-aggregator.git
   ```
-
+  
   ```bash
   cd free-iptv-aggregator/frontend
   ```
@@ -155,8 +155,8 @@ If you notice an issue with the existing code and have a fix in mind, feel free 
 
 ### 8. Create a Pull Request
 
-  Submit a Pull Request with a clear description of:
-  
+Submit a Pull Request with a clear description of:
+
   - What you changed
   - Why the change was made
   - Screenshots (if UI changes)
@@ -170,7 +170,15 @@ If you notice an issue with the existing code and have a fix in mind, feel free 
 
 ---
 
-# Development Guidelines
+## AI-Assisted Development
+
+This project was initially developed with the assistance of AI tools, including Google AI Studio, during a hackathon. The generated code has since been reviewed, refined, and maintained to ensure readability, consistency, and maintainability.
+
+Contributions are welcome from developers of all experience levels. Whether your improvements are created manually or with responsible AI assistance, please ensure that all submitted code is well-tested, maintainable, and consistent with the existing codebase.
+
+---
+
+## Development Guidelines
 
 When contributing, please try to follow these principles:
 
@@ -184,7 +192,7 @@ When contributing, please try to follow these principles:
 
 ---
 
-# Becoming a Maintainer
+## Becoming a Maintainer
 
 This project welcomes contributors who are interested in helping maintain and improve the application.
 
