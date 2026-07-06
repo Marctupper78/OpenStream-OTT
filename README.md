@@ -37,7 +37,7 @@ Users can browse global television channels and stream **.m3u8** content directl
 
 ## Architecture Diagram
 
-
+<img width="486" height="857" alt="Architecture Diagram drawio" src="https://github.com/user-attachments/assets/bbec4a09-a100-49d4-9e86-fbfefeef97d5" />
 
 The application follows a component-based frontend architecture where reusable React components interact with a dedicated services layer to fetch and render publicly available IPTV streams, providing a responsive and maintainable user experience.
 
