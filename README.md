@@ -121,7 +121,20 @@ The application follows a component-based frontend architecture where reusable R
 
 ## Screenshots
 
-
+<img width="1366" height="768" alt="SS1" src="https://github.com/user-attachments/assets/9fe06467-a4b3-46aa-a8cc-ace37a167058" />
+<img width="1366" height="768" alt="SS2" src="https://github.com/user-attachments/assets/de756d26-4545-47db-bf20-031d0ddeb154" />
+<img width="1366" height="768" alt="SS12" src="https://github.com/user-attachments/assets/afdae8f5-35ab-49bc-9f76-8ae2e9b0cfbd" />
+<img width="1366" height="768" alt="SS3" src="https://github.com/user-attachments/assets/1a318816-26fd-4459-85bc-76a980a06bfc" />
+<img width="1366" height="768" alt="SS4" src="https://github.com/user-attachments/assets/38053696-7410-4329-a17c-96d4470361b9" />
+<img width="1366" height="767" alt="SS5" src="https://github.com/user-attachments/assets/de47ced6-cde4-4b73-ae33-f5a5e38c284b" />
+<img width="1366" height="768" alt="SS6" src="https://github.com/user-attachments/assets/df552961-d1d4-4993-bfc4-11fe529e5da8" />
+<img width="1366" height="768" alt="SS7" src="https://github.com/user-attachments/assets/d0689fbb-9fe6-4d15-9124-0f518c8b78c3" />
+<img width="1366" height="763" alt="SS8" src="https://github.com/user-attachments/assets/ff88d747-d0ac-4c9f-83b0-c6670e844670" />
+<img width="1366" height="768" alt="SS9" src="https://github.com/user-attachments/assets/b3f7f798-7686-4806-829c-e10e165d4831" />
+<img width="1366" height="759" alt="SS10" src="https://github.com/user-attachments/assets/1dee8c18-7c5d-4b07-a75f-f62d049166d1" />
+<img width="1366" height="768" alt="SS11" src="https://github.com/user-attachments/assets/ad483cf7-3e88-4e8f-91bf-455e1e4fa1c9" />
+<img width="1366" height="768" alt="SS13" src="https://github.com/user-attachments/assets/35a2ab78-6aad-41a4-93c8-7c659172ca1c" />
+<img width="1366" height="768" alt="SS5" src="https://github.com/user-attachments/assets/140d8458-0ca9-4cbc-9120-14bdf0ef2e0f" />
 
 ---
 
