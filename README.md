@@ -1,85 +1,49 @@
-# 🌍 OpenStream OTT 🎬
-
-<img width="1536" height="1024" alt="OpenStream_OTT" src="https://github.com/user-attachments/assets/f5a84e66-06be-48e2-8181-87bb7913ac0e" />
+# 🌍 OpenStream OTT 📺
 
 
-<div align="center">
 
-A modern **OTT-Style Web Application** for discovering and streaming free global live TV channels.
-
-🎥 **Live Demo** : [Youtube](https://youtu.be/jG7haHUeMps?si=_aL8vEkzXJ2XaKbt)
-
-</div>
+> 🎥 OpenStream OTT Demonstration!
 
 ---
 
-## 📢 Table of Contents
+## Table of Contents
 
-- [About the Project](#-about-the-project)
-- [Features](#-features)
-- [Live Demo](#-live-demo)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Run Locally](#-run-locally)
-- [Deployment](#-deployment)
-- [Future Improvements](#-future-improvements)
-- [Disclaimer](#%EF%B8%8F-disclaimer)
-- [Author](#%E2%80%8D-author)
-
----
-
-## 📌 About the Project
-
-**OpenStream OTT** is a modern web-based OTT-style application that allows users to explore and stream publicly available live TV channels from around the world.
-
-The goal of this project is to provide a clean, simple, and accessible interface for browsing global streams without requiring login, subscriptions, or downloads.
-
-It demonstrates:
-- Modern frontend architecture
-- Clean project structure
-- Live stream playback in the browser
-- Cloud deployment with CI/CD
+- [Introduction](#introduction)
+- [Architecture Diagram](#architecture-diagram)
+- [Project Structure](#project-structure)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Application Workflow](#application-workflow)
+- [Screenshots](#screenshots)
+- [AI-Assisted Development](#ai-assisted-development)
+- [Future Enhancements](#future-enhancements)
+- [Resources](#resources)
+- [Disclaimer](#disclaimer)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author](#author)
 
 ---
 
-## 🔻 Features
+## Introduction
 
-- 🌍 Browse global live TV channels
-- ▶️ Play live .m3u8 streams directly in the browser
-- 🚀 Fast and lightweight interface
-- 🔄 Automatic deployment via GitHub + Vercel
-- 🔓 No login required
-- 📱 Responsive design
+**OpenStream OTT** is a modern OTT-style web application built using **React**, **TypeScript**, and **Vite** for discovering and streaming publicly available live TV channels from around the world.
 
----
+The project focuses on delivering a clean, responsive, and lightweight streaming experience while demonstrating modern frontend development practices, reusable component architecture, cloud deployment, and AI-assisted software development.
 
-## 🚀 Live Demo
-
-🔗 **Try it here** : https://free-iptv-aggregator.vercel.app
-
-> 👉 No signup. No paywall. Just open and explore! 🙂
+Users can browse global television channels and stream **.m3u8** content directly in the browser without requiring registration, subscriptions, or downloads.
 
 ---
 
-## 🛠 Tech Stack
+## Architecture Diagram
 
-### 💻 Programming Languages
-<img src="https://skillicons.dev/icons?i=typescript,html,css" />
 
-### ⚙️ Frameworks & Tools
-<img src="https://skillicons.dev/icons?i=react,vite,nodejs,npm" />
 
-### 🚀 DevOps
-<img src="https://skillicons.dev/icons?i=vercel,git,github" />
-
-### 🤖 AI-Assisted Development
-![Gemini 3](https://img.shields.io/badge/Gemini-3-4285F4?style=for-the-badge&logo=google&logoColor=white)
-![Google AI Studio](https://img.shields.io/badge/Google%20AI%20Studio-Platform-34A853?style=for-the-badge&logo=google&logoColor=white)
-
+The application follows a component-based frontend architecture where reusable React components interact with a dedicated services layer to fetch and render publicly available IPTV streams, providing a responsive and maintainable user experience.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
       free-iptv-aggregator/
       │
@@ -101,82 +65,132 @@ It demonstrates:
       ├── LICENSE                  # MIT License
       └── README.md                # Project documentation
 
-> ✔ The `frontend/` directory contains the complete web application, while root-level files manage repository standards, licensing, and security policies!
+> The `frontend/` directory contains the complete web application, while root-level files manage repository standards, licensing, and security policies!
 
 ---
 
-## 💻 Run Locally
+## Features
 
-### 🔻 Prerequisites
-- Node.js (v18+ recommended)
-
-### 🔻 Steps
-
-#### 1️⃣ Clone the repository :
-
-```
-git clone https://github.com/sahil-me/free-iptv-aggregator.git
-```
-
-```
-cd free-iptv-aggregator/frontend
-```
-
-#### 2️⃣ Install dependencies :
-
-```
-npm install
-```
-
-#### 3️⃣ Start development server :
-
-```
-npm run dev
-```
-
-#### 4️⃣ Open in browser :
-
-```
-http://localhost:5173
-```
+- Browse publicly available global live TV channels
+- Stream .m3u8 channels directly in the browser
+- Modern OTT-style responsive user interface
+- Fast client-side rendering with React and Vite
+- No login or subscription required
+- Automatic deployment using GitHub and Vercel
+- Lightweight component-based frontend architecture
+- Cross-platform browser compatibility
 
 ---
 
-## 🌐 Deployment
+## Tech Stack
 
-This project is deployed using Vercel.
-- Automatic deployments on every git push
-- Global CDN distribution
-- HTTPS enabled by default
+| Technology       | Purpose                 |
+| ---------------- | ----------------------- |
+| TypeScript       | Programming Language    |
+| React            | Frontend Framework      |
+| Vite             | Build Tool              |
+| HTML5            | Application Structure   |
+| CSS3             | Styling                 |
+| Node.js          | Runtime Environment     |
+| npm              | Package Management      |
+| Git              | Version Control         |
+| GitHub           | Source Code Hosting     |
+| Vercel           | Cloud Deployment        |
+| Google AI Studio | AI-Assisted Development |
+| Gemini           | AI Code Assistance      |
 
 ---
 
-## 🎯 Future Improvements
+## Application Workflow
+
+1️⃣ Launch the application.
+
+2️⃣ Browse available live TV channels.
+
+3️⃣ Select a channel.
+
+4️⃣ Fetch the stream source.
+
+5️⃣ Play the .m3u8 stream directly in the browser.
+
+6️⃣ Continue browsing or switch to another channel.
+
+7️⃣ Enjoy a responsive streaming experience without login or subscriptions.
+
+---
+
+## Screenshots
+
+
+
+---
+
+## AI-Assisted Development
+
+This project was initially developed with the assistance of **Google AI Studio** and **Gemini** during a hackathon.
+
+The AI-generated code has since been reviewed, refined, tested, and maintained to improve readability, maintainability, and overall code quality while preserving modern frontend development best practices.
+
+---
+
+## Future Enhancements
 
 - AI-powered channel categorization
 - Stream search and filtering
-- Gemini-powered channel summaries
-- Backend for stream metadata processing
-- Favorites & personalization
+- Favorites & watch history
+- Personalized recommendations
+- Backend metadata service
+- Live channel health monitoring
+- Progressive Web App (PWA) support
 - Performance optimization
+- Accessibility improvements
 
 ---
 
-## ⚠️ Disclaimer
+## Resources
 
-   **OpenStream OTT** does not host, upload, or store any video content.
-
-   All streams are publicly available third-party sources.
-
-   If you are a content owner and would like a stream removed, please open an issue in this repository.
+[![React | Documentation](https://img.shields.io/badge/React-Documentation-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/reference/react)
+[![TypeScript | Documentation](https://img.shields.io/badge/TypeScript-Documentation-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/docs/)
+[![Vite | Guide](https://img.shields.io/badge/Vite-Guide-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/guide/)
+[![Vercel | Documentation](https://img.shields.io/badge/Vercel-Documentation-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/docs)
+[![Google AI Studio | Documentation](https://img.shields.io/badge/Google%20AI%20Studio-Documentation-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://aistudio.google.com/welcome)
+[![MDN | HLS Streaming Guide](https://img.shields.io/badge/MDN-HLS%20Streaming%20Guide-000000?style=for-the-badge&logo=mdnwebdocs&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Streaming)
 
 ---
 
-## 👨‍💻 Author
+## Disclaimer
 
-Built with ❤️ by [Sahil Sharma](https://github.com/sahil-me)
+**OpenStream OTT** does not host, upload, or distribute any video content.
+
+All streams are sourced from publicly available third-party providers. This project serves only as an interface for accessing publicly available streams and does not claim ownership of any linked content.
+
+If you are a content owner and believe a stream should be removed, please open an issue in this repository with the relevant details.
+
+---
+
+## Contributing
+
+Contributions are welcome. Before submitting changes, please review:
+
+- [Contributing Guide](./Contributing.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [Security Policy](./.github/SECURITY.md)
+
+---
+
+## License
+
+This project is licensed under the **MIT License**.
+
+See the **[LICENSE](./LICENSE)** file for details.
+
+---
+
+## Author
+
+[**Sahil Sharma**](https://github.com/sahil-me)
 
 ![giphy](https://github.com/user-attachments/assets/e30d46e7-3a0a-4346-9fcf-4c543e6222d6)
 
-⭐ If you like this project, consider **starring** the repository! 😉
+Thank you for exploring this project. If you found this project helpful, consider giving it a ⭐ to support its continued development.
 
