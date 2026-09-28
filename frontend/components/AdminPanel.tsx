@@ -4,8 +4,8 @@ import { Channel } from '../types';
 import { CATEGORIES } from '../constants';
 
 const ADMIN_PASSWORD = 'orbita2024';
-const CUSTOM_CHANNELS_KEY = 'openstream_custom_channels';
 const ADMIN_AUTH_KEY = 'openstream_admin_auth';
+const API_URL = '/api/channels';
 
 const emptyChannel = (): Partial<Channel> => ({
   name: '',
@@ -26,6 +26,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [password, setPassword] = useState('');
   const [pwError, setPwError] = useState(false);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [loadingChannels, setLoadingChannels] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Partial<Channel> | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [search, setSearch] = useState('');
@@ -33,29 +35,64 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [importText, setImportText] = useState('');
   const [importOpen, setImportOpen] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (authed) load();
+    if (authed) fetchChannels();
   }, [authed]);
 
   useEffect(() => {
     if (toast) {
-      const t = setTimeout(() => setToast(null), 2500);
+      const t = setTimeout(() => setToast(null), 3000);
       return () => clearTimeout(t);
     }
   }, [toast]);
 
-  const load = () => {
-    const saved = JSON.parse(localStorage.getItem(CUSTOM_CHANNELS_KEY) || '[]') as Channel[];
-    setChannels(saved);
+  // ── API calls ─────────────────────────────────────────────────────────────
+
+  const fetchChannels = async () => {
+    setLoadingChannels(true);
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error('Falha ao carregar');
+      const data = await res.json();
+      setChannels(data);
+    } catch {
+      showToast('❌ Erro ao carregar canais do servidor', 'err');
+    } finally {
+      setLoadingChannels(false);
+    }
   };
 
-  const save = (list: Channel[]) => {
-    localStorage.setItem(CUSTOM_CHANNELS_KEY, JSON.stringify(list));
-    setChannels(list);
+  const pushChannels = async (list: Channel[]) => {
+    setSaving(true);
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': ADMIN_PASSWORD,
+        },
+        body: JSON.stringify(list),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao salvar');
+      }
+      setChannels(list);
+      return true;
+    } catch (e: any) {
+      showToast(`❌ ${e.message}`, 'err');
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => setToast({ msg, type });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,10 +105,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editing) return;
     if (!editing.name?.trim() || !editing.url?.trim()) {
-      setToast('❌ Nome e URL são obrigatórios');
+      showToast('❌ Nome e URL são obrigatórios', 'err');
       return;
     }
     const channel: Channel = {
@@ -84,24 +121,25 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       language: editing.language?.trim() || '',
       source: 'custom',
     };
-    let updated: Channel[];
-    if (isNew) {
-      updated = [channel, ...channels];
-    } else {
-      updated = channels.map(c => c.id === channel.id ? channel : c);
+    const updated = isNew
+      ? [channel, ...channels]
+      : channels.map(c => c.id === channel.id ? channel : c);
+
+    const ok = await pushChannels(updated);
+    if (ok) {
+      setEditing(null);
+      showToast(isNew ? '✅ Canal adicionado!' : '✅ Canal atualizado!');
     }
-    save(updated);
-    setEditing(null);
-    setToast('✅ Canal salvo com sucesso!');
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('Deletar este canal?')) return;
-    save(channels.filter(c => c.id !== id));
-    setToast('🗑️ Canal removido');
+    const updated = channels.filter(c => c.id !== id);
+    const ok = await pushChannels(updated);
+    if (ok) showToast('🗑️ Canal removido');
   };
 
-  const handleImportM3U = () => {
+  const handleImportM3U = async () => {
     const lines = importText.split('\n');
     const imported: Channel[] = [];
     let current: Partial<Channel> = {};
@@ -113,7 +151,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         const cat = line.match(/group-title="([^"]*)"/)?.[1] || 'general';
         const country = line.match(/tvg-country="([^"]*)"/)?.[1] || '';
         const lang = line.match(/tvg-language="([^"]*)"/)?.[1] || '';
-        current = { name, logo, category: cat.toLowerCase(), country, language: lang, source: 'custom' };
+        current = { name, logo, category: cat.toLowerCase(), country, language: lang };
       } else if (line.startsWith('http') && current.name) {
         imported.push({
           id: `custom-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -135,10 +173,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const merged = [...imported, ...channels].filter(
       (v, i, a) => a.findIndex(t => t.url === v.url) === i
     );
-    save(merged);
-    setImportResult(`✅ ${imported.length} canais importados!`);
-    setImportText('');
-    setTimeout(() => { setImportOpen(false); setImportResult(null); }, 2000);
+    const ok = await pushChannels(merged);
+    if (ok) {
+      setImportResult(`✅ ${imported.length} canais importados!`);
+      setImportText('');
+      setTimeout(() => { setImportOpen(false); setImportResult(null); }, 2000);
+    }
   };
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,10 +254,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   // ── Admin UI ───────────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 overflow-y-auto">
+
       {/* Toast */}
       {toast && (
-        <div className="fixed top-6 right-6 z-[60] bg-slate-800 border border-slate-600 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-medium animate-fade-in">
-          {toast}
+        <div className={`fixed top-6 right-6 z-[60] border px-5 py-3 rounded-xl shadow-2xl text-sm font-medium
+          ${toast.type === 'ok' ? 'bg-slate-800 border-green-700 text-green-300' : 'bg-slate-800 border-red-700 text-red-300'}`}>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* Saving overlay */}
+      {saving && (
+        <div className="fixed inset-0 z-[59] bg-black/40 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-slate-800 border border-slate-600 rounded-xl px-8 py-5 flex items-center gap-4 shadow-2xl">
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-red-500" />
+            <span className="font-bold">Salvando no servidor...</span>
+          </div>
         </div>
       )}
 
@@ -232,13 +284,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </svg>
           </div>
           <div>
-            <h1 className="font-black text-lg">Painel Admin</h1>
-            <p className="text-slate-400 text-xs">{channels.length} canais personalizados</p>
+            <h1 className="font-black text-lg leading-none">Painel Admin</h1>
+            <p className="text-slate-400 text-xs mt-0.5">
+              {loadingChannels ? 'Carregando...' : `${channels.length} canal(is) no servidor`}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <button onClick={fetchChannels} disabled={loadingChannels}
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50">
+            <svg className={`w-4 h-4 ${loadingChannels ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Atualizar
+          </button>
           <button onClick={() => setImportOpen(true)}
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
@@ -246,22 +307,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           </button>
           {channels.length > 0 && (
             <button onClick={handleExport}
-              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Exportar
+              Exportar .m3u
             </button>
           )}
           <button onClick={() => { setIsNew(true); setEditing(emptyChannel()); }}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-black transition-colors">
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-black transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Novo Canal
           </button>
           <button onClick={onClose}
-            className="ml-2 text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800">
+            className="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800 ml-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -270,6 +331,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
@@ -277,7 +339,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar canais..."
+              placeholder="Buscar canal..."
               className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/50" />
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -290,12 +352,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Channels table */}
-        {channels.length === 0 ? (
+        {/* Loading */}
+        {loadingChannels ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-red-500 mb-4" />
+            <p className="text-slate-400">Carregando canais do servidor...</p>
+          </div>
+        ) : channels.length === 0 ? (
           <div className="text-center py-24">
             <div className="text-6xl mb-4">📺</div>
             <h3 className="text-xl font-bold mb-2">Nenhum canal ainda</h3>
-            <p className="text-slate-400 mb-6">Adicione canais manualmente ou importe uma playlist M3U</p>
+            <p className="text-slate-400 mb-6">Adicione manualmente ou importe uma playlist M3U</p>
             <div className="flex gap-3 justify-center">
               <button onClick={() => { setIsNew(true); setEditing(emptyChannel()); }}
                 className="bg-red-600 hover:bg-red-500 px-6 py-2.5 rounded-lg font-bold transition-colors">
@@ -313,7 +380,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             {filtered.map(ch => (
               <div key={ch.id}
                 className="bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl px-4 py-3 flex items-center gap-4 transition-all group">
-                {/* Logo */}
                 <div className="w-12 h-10 bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                   {ch.logo ? (
                     <img src={ch.logo} alt="" className="w-full h-full object-contain"
@@ -324,26 +390,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     </svg>
                   )}
                 </div>
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate">{ch.name}</p>
                   <p className="text-slate-500 text-xs truncate">{ch.url}</p>
                 </div>
-                {/* Category badge */}
                 <span className="hidden md:block bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded-full capitalize flex-shrink-0">
                   {ch.category}
                 </span>
-                {/* Actions */}
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => { setEditing({ ...ch }); setIsNew(false); }}
-                    className="bg-slate-700 hover:bg-slate-600 p-2 rounded-lg transition-colors" title="Editar">
+                    className="bg-slate-700 hover:bg-slate-600 p-2 rounded-lg transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
                   <button onClick={() => handleDelete(ch.id)}
-                    className="bg-red-900/40 hover:bg-red-700 p-2 rounded-lg transition-colors" title="Deletar">
+                    className="bg-red-900/40 hover:bg-red-700 p-2 rounded-lg transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -356,62 +419,60 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         )}
       </div>
 
-      {/* ── Edit / New Modal ───────────────────────────────────────────────── */}
+      {/* ── Edit / New Modal ───────────────────────────────────────────────────── */}
       {editing && (
         <div className="fixed inset-0 z-[55] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
             <div className="bg-slate-800 px-6 py-4 flex items-center justify-between">
               <h3 className="font-black text-lg">{isNew ? '➕ Novo Canal' : '✏️ Editar Canal'}</h3>
-              <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-white">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <Field label="Nome do Canal *" required>
-                  <input value={editing.name || ''} onChange={e => setEditing({ ...editing, name: e.target.value })}
-                    placeholder="CNN Brasil" className={inputCls} />
-                </Field>
-                <Field label="URL do Stream (m3u8 / ts) *" required>
-                  <input value={editing.url || ''} onChange={e => setEditing({ ...editing, url: e.target.value })}
-                    placeholder="https://exemplo.com/live/stream.m3u8" className={inputCls} />
-                </Field>
-                <Field label="Logo (URL da imagem)">
-                  <div className="flex gap-2 items-center">
-                    <input value={editing.logo || ''} onChange={e => setEditing({ ...editing, logo: e.target.value })}
-                      placeholder="https://logo.com/canal.png" className={`${inputCls} flex-1`} />
-                    {editing.logo && (
-                      <img src={editing.logo} alt="" className="w-10 h-10 rounded-lg object-contain bg-slate-800 border border-slate-700"
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    )}
-                  </div>
-                </Field>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Categoria">
-                    <select value={editing.category || 'general'} onChange={e => setEditing({ ...editing, category: e.target.value })}
-                      className={inputCls}>
-                      {CATEGORIES.filter(c => c.id !== 'all').map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                      <option value="general">General</option>
-                    </select>
-                  </Field>
-                  <Field label="País (código)">
-                    <input value={editing.country || ''} onChange={e => setEditing({ ...editing, country: e.target.value })}
-                      placeholder="BR" maxLength={3} className={inputCls} />
-                  </Field>
+              <Field label="Nome do Canal *">
+                <input value={editing.name || ''} onChange={e => setEditing({ ...editing, name: e.target.value })}
+                  placeholder="CNN Brasil" className={inputCls} />
+              </Field>
+              <Field label="URL do Stream (m3u8 / ts) *">
+                <input value={editing.url || ''} onChange={e => setEditing({ ...editing, url: e.target.value })}
+                  placeholder="https://exemplo.com/live/stream.m3u8" className={inputCls} />
+              </Field>
+              <Field label="Logo (URL da imagem)">
+                <div className="flex gap-2 items-center">
+                  <input value={editing.logo || ''} onChange={e => setEditing({ ...editing, logo: e.target.value })}
+                    placeholder="https://logo.com/canal.png" className={`${inputCls} flex-1`} />
+                  {editing.logo && (
+                    <img src={editing.logo} alt="" className="w-10 h-10 rounded-lg object-contain bg-slate-800 border border-slate-700"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  )}
                 </div>
-                <Field label="Idioma">
-                  <input value={editing.language || ''} onChange={e => setEditing({ ...editing, language: e.target.value })}
-                    placeholder="Portuguese" className={inputCls} />
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Categoria">
+                  <select value={editing.category || 'general'} onChange={e => setEditing({ ...editing, category: e.target.value })}
+                    className={inputCls}>
+                    {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                    <option value="general">General</option>
+                  </select>
+                </Field>
+                <Field label="País (código)">
+                  <input value={editing.country || ''} onChange={e => setEditing({ ...editing, country: e.target.value })}
+                    placeholder="BR" maxLength={3} className={inputCls} />
                 </Field>
               </div>
+              <Field label="Idioma">
+                <input value={editing.language || ''} onChange={e => setEditing({ ...editing, language: e.target.value })}
+                  placeholder="Portuguese" className={inputCls} />
+              </Field>
             </div>
             <div className="px-6 pb-6 flex gap-3">
-              <button onClick={handleSave}
-                className="flex-1 bg-red-600 hover:bg-red-500 font-black py-2.5 rounded-xl transition-colors">
+              <button onClick={handleSave} disabled={saving}
+                className="flex-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 font-black py-2.5 rounded-xl transition-colors">
                 {isNew ? 'Adicionar Canal' : 'Salvar Alterações'}
               </button>
               <button onClick={() => setEditing(null)}
@@ -423,34 +484,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         </div>
       )}
 
-      {/* ── Import M3U Modal ─────────────────────────────────────────────────── */}
+      {/* ── Import M3U Modal ──────────────────────────────────────────────────── */}
       {importOpen && (
         <div className="fixed inset-0 z-[55] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl">
             <div className="bg-slate-800 px-6 py-4 flex items-center justify-between">
               <h3 className="font-black text-lg">📥 Importar Playlist M3U</h3>
               <button onClick={() => { setImportOpen(false); setImportResult(null); setImportText(''); }}
-                className="text-slate-400 hover:text-white transition-colors">
+                className="text-slate-400 hover:text-white">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="flex gap-3">
-                <button onClick={() => fileRef.current?.click()}
-                  className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Carregar arquivo .m3u
-                </button>
-                <input ref={fileRef} type="file" accept=".m3u,.m3u8,.txt" onChange={handleFileImport} className="hidden" />
-              </div>
+              <button onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Carregar arquivo .m3u
+              </button>
+              <input ref={fileRef} type="file" accept=".m3u,.m3u8,.txt" onChange={handleFileImport} className="hidden" />
               <textarea
                 value={importText}
                 onChange={e => setImportText(e.target.value)}
-                rows={12}
+                rows={10}
                 placeholder={`Cole sua playlist M3U aqui:\n\n#EXTM3U\n#EXTINF:-1 tvg-logo="https://..." group-title="News",Canal Exemplo\nhttps://stream.exemplo.com/live.m3u8`}
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-600/50 resize-none"
               />
@@ -461,9 +520,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               )}
             </div>
             <div className="px-6 pb-6 flex gap-3">
-              <button onClick={handleImportM3U} disabled={!importText.trim()}
+              <button onClick={handleImportM3U} disabled={!importText.trim() || saving}
                 className="flex-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed font-black py-2.5 rounded-xl transition-colors">
-                Importar Canais
+                {saving ? 'Salvando...' : 'Importar Canais'}
               </button>
               <button onClick={() => { setImportOpen(false); setImportResult(null); setImportText(''); }}
                 className="flex-1 bg-slate-800 hover:bg-slate-700 font-bold py-2.5 rounded-xl transition-colors">
@@ -477,19 +536,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   );
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
 const inputCls = 'w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:border-transparent transition-all';
-
-const Field: React.FC<{ label: string; required?: boolean; children: React.ReactNode }> = ({ label, required, children }) => (
+const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div>
-    <label className="text-xs font-bold text-slate-400 mb-1.5 block">
-      {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-    </label>
+    <label className="text-xs font-bold text-slate-400 mb-1.5 block">{label}</label>
     {children}
   </div>
 );
 
-export const loadCustomChannels = (): Channel[] =>
-  JSON.parse(localStorage.getItem(CUSTOM_CHANNELS_KEY) || '[]');
+// Mantido para compatibilidade (App.tsx ainda usa)
+export const loadCustomChannels = (): Channel[] => [];
 
 export default AdminPanel;

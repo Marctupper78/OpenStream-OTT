@@ -22,26 +22,24 @@ const App: React.FC = () => {
   const [showAdmin, setShowAdmin] = useState(false);
   const [footerClickCount, setFooterClickCount] = useState(0);
 
-  useEffect(() => {
-    const loadChannels = async () => {
-      setLoading(true);
-      const results = await Promise.all([
-        fetchAndParseM3U(IPTV_SOURCES.CATEGORY_NEWS),
-        fetchAndParseM3U(IPTV_SOURCES.CATEGORY_MOVIES),
-        fetchAndParseM3U(IPTV_SOURCES.CATEGORY_SPORTS),
-        fetchAndParseM3U(IPTV_SOURCES.CATEGORY_MUSIC),
-        fetchAndParseM3U(IPTV_SOURCES.CATEGORY_ENTERTAINMENT),
-      ]);
-      
-      const iptvChannels = results.flat().filter((v, i, a) => a.findIndex(t => (t.url === v.url)) === i);
-      const custom = loadCustomChannels();
-      // Custom channels appear first; deduplicate by URL
-      const combined = [...custom, ...iptvChannels].filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
-      setChannels(combined);
-      setLoading(false);
-    };
+  const loadAllChannels = async () => {
+    setLoading(true);
+    const [customRes, ...iptvResults] = await Promise.all([
+      fetch('/api/channels').then(r => r.ok ? r.json() : []).catch(() => []),
+      fetchAndParseM3U(IPTV_SOURCES.CATEGORY_NEWS),
+      fetchAndParseM3U(IPTV_SOURCES.CATEGORY_MOVIES),
+      fetchAndParseM3U(IPTV_SOURCES.CATEGORY_SPORTS),
+      fetchAndParseM3U(IPTV_SOURCES.CATEGORY_MUSIC),
+      fetchAndParseM3U(IPTV_SOURCES.CATEGORY_ENTERTAINMENT),
+    ]);
+    const iptvChannels = (iptvResults as Channel[][]).flat().filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
+    const combined = [...(customRes as Channel[]), ...iptvChannels].filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
+    setChannels(combined);
+    setLoading(false);
+  };
 
-    loadChannels();
+  useEffect(() => {
+    loadAllChannels();
     loadFavorites();
   }, []);
 
@@ -321,12 +319,7 @@ const App: React.FC = () => {
         <AdminPanel
           onClose={() => {
             setShowAdmin(false);
-            // Reload channels after admin edits
-            const custom = loadCustomChannels();
-            setChannels(prev => {
-              const iptv = prev.filter(c => c.source !== 'custom');
-              return [...custom, ...iptv].filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
-            });
+            loadAllChannels();
           }}
         />
       )}
