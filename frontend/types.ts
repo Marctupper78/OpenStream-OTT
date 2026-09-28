@@ -27,5 +27,6 @@ export enum AppRoute {
   WATCH = 'watch',
   LEGAL = 'legal',
   BROWSE = 'browse',
-  FAVORITES = 'favorites'
+  FAVORITES = 'favorites',
+  ADMIN = 'admin'
 }

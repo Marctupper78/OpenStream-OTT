@@ -6,6 +6,7 @@ import { IPTV_SOURCES, CATEGORIES } from './constants';
 import Header from './components/Header';
 import VideoPlayer from './components/VideoPlayer';
 import ChannelCard from './components/ChannelCard';
+import AdminPanel, { loadCustomChannels } from './components/AdminPanel';
 
 const FAVORITES_KEY = 'openstream_favorites';
 
@@ -18,6 +19,8 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [favorites, setFavorites] = useState<Channel[]>([]);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [footerClickCount, setFooterClickCount] = useState(0);
 
   useEffect(() => {
     const loadChannels = async () => {
@@ -30,7 +33,10 @@ const App: React.FC = () => {
         fetchAndParseM3U(IPTV_SOURCES.CATEGORY_ENTERTAINMENT),
       ]);
       
-      const combined = results.flat().filter((v, i, a) => a.findIndex(t => (t.url === v.url)) === i);
+      const iptvChannels = results.flat().filter((v, i, a) => a.findIndex(t => (t.url === v.url)) === i);
+      const custom = loadCustomChannels();
+      // Custom channels appear first; deduplicate by URL
+      const combined = [...custom, ...iptvChannels].filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
       setChannels(combined);
       setLoading(false);
     };
@@ -289,8 +295,41 @@ const App: React.FC = () => {
       )}
 
       <footer className="bg-slate-900 border-t border-slate-800 py-12 px-6 text-center">
-        <span className="text-xl font-black tracking-tighter">OPENSTREAM OTT</span>
+        <span
+          className="text-xl font-black tracking-tighter cursor-default select-none"
+          onClick={() => {
+            const next = footerClickCount + 1;
+            setFooterClickCount(next);
+            if (next >= 5) {
+              setFooterClickCount(0);
+              setShowAdmin(true);
+            }
+          }}
+          title={footerClickCount > 0 ? `${5 - footerClickCount} cliques para admin` : undefined}
+        >
+          OPENSTREAM OTT
+        </span>
+        <p className="text-slate-600 text-xs mt-2">
+          {footerClickCount > 0 && footerClickCount < 5
+            ? `🔐 ${5 - footerClickCount} clique(s) para área admin`
+            : '© 2024 Órbita Stream'}
+        </p>
       </footer>
+
+      {/* Admin Panel */}
+      {showAdmin && (
+        <AdminPanel
+          onClose={() => {
+            setShowAdmin(false);
+            // Reload channels after admin edits
+            const custom = loadCustomChannels();
+            setChannels(prev => {
+              const iptv = prev.filter(c => c.source !== 'custom');
+              return [...custom, ...iptv].filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
