@@ -44,13 +44,15 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, onLegalCli
       }`}
     >
       <div className="flex items-center gap-10">
-        <div onClick={onHomeClick} className="flex items-center gap-2 cursor-pointer group">
-          <div className="bg-red-600 text-white p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <span className="text-xl md:text-2xl font-black tracking-tighter">OPENSTREAM</span>
+        <div onClick={onHomeClick} className="flex items-center gap-2.5 cursor-pointer group">
+          <img
+            src="/logo.png"
+            alt="OrbitaStreaming"
+            className="h-9 w-9 object-contain group-hover:scale-110 transition-transform drop-shadow-lg"
+          />
+          <span className="text-xl md:text-2xl font-black tracking-tight">
+            <span className="text-orange-400">Orbita</span>Streaming
+          </span>
         </div>
 
         <nav className="hidden lg:flex items-center gap-6">

@@ -110,12 +110,7 @@ const AppInner: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center animate-pulse">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
+          <img src="/logo.png" alt="OrbitaStreaming" className="w-16 h-16 object-contain animate-pulse drop-shadow-lg" />
           <p className="text-slate-400 font-medium">Carregando...</p>
         </div>
       </div>
@@ -354,26 +349,28 @@ const AppInner: React.FC = () => {
         />
       )}
 
-      {/* Footer com gatilho secreto de admin */}
       <footer className="bg-slate-900 border-t border-slate-800 py-10 px-6 text-center">
-        <span
-          className="text-xl font-black tracking-tighter cursor-default select-none"
-          onClick={() => {
-            const next = footerClickCount + 1;
-            setFooterClickCount(next);
-            if (next >= 5) {
-              setFooterClickCount(0);
-              window.location.href = '/admin';
-            }
-          }}
-          title={footerClickCount > 0 ? `${5 - footerClickCount} cliques para admin` : undefined}
-        >
-          ÓRBITA STREAM
-        </span>
-        <p className="text-slate-600 text-xs mt-2">
+        <div className="flex items-center justify-center gap-2.5 mb-2">
+          <img src="/logo.png" alt="" className="h-7 w-7 object-contain opacity-70" />
+          <span
+            className="text-xl font-black tracking-tight cursor-default select-none"
+            onClick={() => {
+              const next = footerClickCount + 1;
+              setFooterClickCount(next);
+              if (next >= 5) {
+                setFooterClickCount(0);
+                window.location.href = '/admin';
+              }
+            }}
+            title={footerClickCount > 0 ? `${5 - footerClickCount} cliques para admin` : undefined}
+          >
+            <span className="text-orange-400">Orbita</span>Streaming
+          </span>
+        </div>
+        <p className="text-slate-600 text-xs">
           {footerClickCount > 0 && footerClickCount < 5
             ? `🔐 ${5 - footerClickCount} clique(s) restantes`
-            : '© 2024 Órbita Stream · Todos os direitos reservados'}
+            : '© 2024 OrbitaStreaming · Todos os direitos reservados'}
         </p>
       </footer>
 

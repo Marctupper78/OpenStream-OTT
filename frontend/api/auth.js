@@ -7,6 +7,8 @@ import { put, list } from '@vercel/blob';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+export const config = { api: { bodyParser: true } };
+
 const USERS_BLOB = 'users.json';
 const JWT_SECRET = process.env.JWT_SECRET || 'orbita-stream-secret-2024';
 const JWT_EXPIRES = '30d';
