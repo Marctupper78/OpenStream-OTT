@@ -11,14 +11,15 @@ export const IPTV_SOURCES = {
 };
 
 export const CATEGORIES = [
-  { id: 'all', name: 'All Channels' },
-  { id: 'news', name: 'News' },
-  { id: 'movies', name: 'Movies' },
-  { id: 'sports', name: 'Sports' },
-  { id: 'music', name: 'Music' },
-  { id: 'entertainment', name: 'Entertainment' },
-  { id: 'documentary', name: 'Documentary' },
-  { id: 'kids', name: 'Kids' }
+  { id: 'all', name: 'Todos' },
+  { id: 'news', name: 'Notícias' },
+  { id: 'movies', name: 'Filmes' },
+  { id: 'sports', name: 'Esportes' },
+  { id: 'music', name: 'Música' },
+  { id: 'entertainment', name: 'Entretenimento' },
+  { id: 'documentary', name: 'Documentários' },
+  { id: 'kids', name: 'Infantil' },
+  { id: 'general', name: 'Geral' },
 ];
 
 export const FALLBACK_LOGO = 'https://picsum.photos/seed/tv/300/200';

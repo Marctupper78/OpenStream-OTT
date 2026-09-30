@@ -13,9 +13,9 @@ const emptyChannel = (): Partial<Channel> => ({
 
 interface AdminData { custom: Channel[]; blocked: string[]; }
 
-interface AdminPanelProps { onClose: () => void; }
+interface AdminPanelProps { onClose: () => void; standalone?: boolean; }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, standalone = false }) => {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true');
   const [password, setPassword] = useState('');
   const [pwError, setPwError] = useState(false);
