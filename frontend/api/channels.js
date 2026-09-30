@@ -1,37 +1,36 @@
 // api/channels.js — Vercel Serverless Function
-// GET  /api/channels        → retorna lista de canais do Blob
-// POST /api/channels        → salva lista (requer x-admin-password header)
-// DELETE /api/channels/:id  → remove canal por id
+// GET  /api/channels  → { custom: Channel[], blocked: string[] }
+// POST /api/channels  → salva { custom, blocked } (requer x-admin-password)
 
-import { put, head, del, list } from '@vercel/blob';
+import { put, list } from '@vercel/blob';
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'orbita2024';
 const BLOB_KEY = 'custom-channels.json';
 
-const corsHeaders = {
+const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, x-admin-password',
   'Content-Type': 'application/json',
 };
 
-async function getChannels() {
+async function getData() {
   try {
-    // Lista blobs que começam com o nome do arquivo
     const { blobs } = await list({ prefix: BLOB_KEY });
-    if (blobs.length === 0) return [];
-
-    const blob = blobs[0];
-    const res = await fetch(blob.url);
-    if (!res.ok) return [];
-    return await res.json();
+    if (!blobs.length) return { custom: [], blocked: [] };
+    const res = await fetch(blobs[0].url);
+    if (!res.ok) return { custom: [], blocked: [] };
+    const data = await res.json();
+    // Suporte a formato legado (array direto)
+    if (Array.isArray(data)) return { custom: data, blocked: [] };
+    return { custom: data.custom || [], blocked: data.blocked || [] };
   } catch {
-    return [];
+    return { custom: [], blocked: [] };
   }
 }
 
-async function saveChannels(channels) {
-  await put(BLOB_KEY, JSON.stringify(channels), {
+async function saveData(data) {
+  await put(BLOB_KEY, JSON.stringify(data), {
     access: 'public',
     contentType: 'application/json',
     addRandomSuffix: false,
@@ -39,34 +38,34 @@ async function saveChannels(channels) {
 }
 
 export default async function handler(req, res) {
-  // Preflight CORS
   if (req.method === 'OPTIONS') {
-    return res.status(200).set(corsHeaders).end();
+    Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v));
+    return res.status(200).end();
   }
-
-  // Set CORS headers em todas as respostas
-  Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v));
 
   // ── GET ──────────────────────────────────────────────────────────────────
   if (req.method === 'GET') {
-    const channels = await getChannels();
-    return res.status(200).json(channels);
+    const data = await getData();
+    return res.status(200).json(data);
   }
 
-  // ── POST (salvar lista completa) ─────────────────────────────────────────
+  // ── POST ─────────────────────────────────────────────────────────────────
   if (req.method === 'POST') {
     const password = req.headers['x-admin-password'];
     if (password !== ADMIN_PASSWORD) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
-
-    const channels = req.body;
-    if (!Array.isArray(channels)) {
-      return res.status(400).json({ error: 'Body deve ser um array de canais' });
+    const body = req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return res.status(400).json({ error: 'Body inválido. Envie { custom: [], blocked: [] }' });
     }
-
-    await saveChannels(channels);
-    return res.status(200).json({ ok: true, count: channels.length });
+    const data = {
+      custom: Array.isArray(body.custom) ? body.custom : [],
+      blocked: Array.isArray(body.blocked) ? body.blocked : [],
+    };
+    await saveData(data);
+    return res.status(200).json({ ok: true, custom: data.custom.length, blocked: data.blocked.length });
   }
 
   return res.status(405).json({ error: 'Método não permitido' });
